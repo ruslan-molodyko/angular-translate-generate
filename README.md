@@ -1,6 +1,8 @@
 # angular-translating-generate
 Generate translate keys for angular file views
 
+https://scotch.io/tutorials/internationalization-of-angularjs-applications
+
 ```
 source: ['./public/index.html']
 output: public/locales
