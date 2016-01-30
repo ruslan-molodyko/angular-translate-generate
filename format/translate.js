@@ -1,5 +1,6 @@
 /**
  * Created by rmolodyko on 30.01.2016.
+ * molot1393
  */
 var key = 'trnsl.1.1.20160130T163723Z.194841daa5de2be9.120de7908004dd6c396767a4e59b9c35b1592f26',
     translate = require('yandex-translate')(key),
