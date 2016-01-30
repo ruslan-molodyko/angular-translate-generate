@@ -3,83 +3,102 @@
  */
 
 var fs = require('fs'),
-    Class = require('./class.js');
+    Class = require('./class.js'),
+    Parser = require('./parser.js'),
+    Writer = require('./writer.js');
 
-/**
- * Work with keys of translate
- */
-var Parser = Class.create(function() {
-
-    /**
-     * Init parser
-     * @param source
-     */
-    this.constructor = function(source) {
-
-        // Path to file
-        this.source = source;
-
-        // Pattern for getting translate expression
-        this.$patternTranslate = /\{\{\s*\"([\w\W]*?)\"\s*\|\s*translate\s*\}\}/gmi;
-    };
+module.exports = Class.create(function() {
 
     /**
-     * Get keys from file
+     * Init class
+     * @param config
      */
-    this.getKeys = function(cb) {
-
-        // Pass content of file to the callback
-        fs.readFile(this.source, 'utf8', function(err, content) {
-
-            // Handle error
-            if (err) {
-                throw new Error('Error when read file [' + this.source + ']');
-            }
-
-            // Parse content and get keys
-            var keys = this.parse(content);
-
-            // Call callback
-            cb(keys, this.source);
-        }.bind(this));
-    };
-
-    /**
-     * Get keys
-     * @param content
-     * @returns {Array}
-     */
-    this.parse = function(content) {
-
-        var matches = content.match(this.$patternTranslate),
-            result = [];
-
-        // Check if matches is exists
-        if (matches != null) {
-
-            // Get key from translate expression
-            matches.forEach(function(item) {
-                result.push(item.replace(this.$patternTranslate, '$1'));
-            }.bind(this));
-        }
-
-        return result;
-    };
-});
-
-var Trans = Class.create(function() {
     this.constructor = function(config) {
 
         this.source = config.source;
         this.output = config.output;
+        this.locales = config.locales;
+        this.defaultFormat = config.defaultFormat || 'raw';
 
-        this.eachSource(function(item) {
+        // Init parser
+        this.parser = new Parser();
 
-            var parser = new Parser(item, this.output);
-            parser.getKeys(this.handleKeys.bind(this));
+        // Init writer
+        this.writer = new Writer(this.output);
+
+        // Path to format handlers
+        this.$pathFormat = './format';
+    };
+
+    this.handleLocales = function(keys) {
+
+        // Check if locales exists
+        if (this.locales == null) {
+            throw new Error('Locales not found');
+        }
+
+        // List of formatter
+        var formatterList = {},
+            values = keys;
+
+        // Iterate all reserved locales and get content and write for each locale
+        for (var localeKey in this.locales) {
+            var locale = this.locales[localeKey];
+
+            // Get formatter
+            var formatKey = locale.format || this.defaultFormat;
+
+            // Get formatter instance
+            formatterList[formatKey] = formatterList[formatKey] || require(this.$pathFormat + '/' + formatKey);
+
+            // Check existing
+            if (formatterList[formatKey] == null) {
+                throw new Error('Formatter not found [' + formatKey + ']');
+            }
+
+            // Format keys
+            var newKeys = {};
+            keys.forEach(function(item, key) {
+                // Change keys and save valus
+                newKeys[this.formatKeys(item, key)] = values[key];
+            }.bind(this));
+
+            // Handle keys and get content of locale file
+            var data = formatterList[formatKey](newKeys),
+                langName = this.getLangName(locale, localeKey);
+
+            this.writer.write(langName, data);
+        }
+    };
+
+    /**
+     * Get right locale name for using in writer
+     * @param locale
+     * @param localeKey
+     * @returns {*}
+     */
+    this.getLangName = function(locale, localeKey) {
+
+        // If name is exists use it or use locale key
+        if (locale.name != null) {
+            return locale.name;
+        } else {
+            return localeKey;
+        }
+    };
+
+    /**
+     * Start handling
+     */
+    this.start = function() {
+
+        // Iterate all sources(files with translates) and handle their
+        this.eachSource(function(path) {
+
+            // Get all keys of file
+            this.parser.getKeys(path, this.handleKeys.bind(this));
 
         }.bind(this));
-
     };
 
     this.handleKeys = function(keys, source) {
@@ -89,12 +108,7 @@ var Trans = Class.create(function() {
             throw new Error('Keys not found in [' + source + ']');
         }
 
-        // Format keys
-        keys.forEach(function(item, key) {
-            keys[key] = this.formatKeys(item, key);
-        }.bind(this));
-
-        console.log(keys);
+        this.handleLocales(keys);
     };
 
     /**
@@ -112,10 +126,10 @@ var Trans = Class.create(function() {
      * @returns {*}
      */
     this.formatKeys = function(value, key) {
-        return value.replace(/\s+/g, '_').toLowerCase();
+        return value
+            //.replace(/\s+/g, '_')
+            //.replace(/[\"\']/g, '')
+            //.toLowerCase()
+            ;
     };
 });
-
-//new Parser();
-
-module.exports = Trans;
