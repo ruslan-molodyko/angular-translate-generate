@@ -1,7 +1,13 @@
 /**
  * Created by rmolodyko on 30.01.2016.
  */
-module.exports = function(keys) {
+/**
+ * Values as keys
+ * @param keys
+ * @param cb
+ * @param lang
+ */
+module.exports = function(keys, cb, lang) {
 
     var result = {},
         value;
@@ -11,5 +17,5 @@ module.exports = function(keys) {
         result[key] = value;
     }
 
-    return result;
+    cb(result);
 };

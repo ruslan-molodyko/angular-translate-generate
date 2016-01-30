@@ -15,6 +15,8 @@ module.exports = Class.create(function() {
      */
     this.constructor = function(config) {
 
+        console.log('Start');
+
         this.source = config.source;
         this.output = config.output;
         this.locales = config.locales;
@@ -63,12 +65,32 @@ module.exports = Class.create(function() {
                 newKeys[this.formatKeys(item, key)] = values[key];
             }.bind(this));
 
-            // Handle keys and get content of locale file
-            var data = formatterList[formatKey](newKeys),
-                langName = this.getLangName(locale, localeKey);
+            // User closure for passing locale and locale key to the callback
+            (function(l, k) {
 
-            this.writer.write(langName, data);
+                var fullLang = this.getLangName(l, k);
+
+                // Handle keys and get content of locale file
+                formatterList[formatKey](newKeys, function(data) {
+
+                    // When data was formatted call callback
+                    this.onFormat(fullLang, data);
+
+                }.bind(this), fullLang);
+
+            }.bind(this))(locale, localeKey);
         }
+    };
+
+    /**
+     * When data was formatted write it to the file
+     * @param langName
+     * @param data
+     */
+    this.onFormat = function(langName, data) {
+
+        // Save to file
+        this.writer.write(langName, data);
     };
 
     /**
