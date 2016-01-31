@@ -3,7 +3,10 @@ Generate translate keys for angular file views
 
 https://scotch.io/tutorials/internationalization-of-angularjs-applications
 
+Config for generate keys
+
 ```
+
 source: ['./public/index.html']
 output: public/locales
 locales:
@@ -16,18 +19,42 @@ locales:
   ua:
     name: ua_UK
     format: translate
+  
 ```
 
+Config for generate view
 
 ```
+
+source:
+    ./public/index.html:
+        selectors: [.main-container, title]
+    ./public/index-save.html:
+
+output: public
+prefix: trans-
+
+```
+
+```
+
 var YAML = require('yamljs'),
-    Trans = require('./trans');
+    TransKeys = require('./trans/generate_keys'),
+    TransView = require('./trans/generate_view'),
+    CONFIG = {};
 
-var CONFIG = {};
-CONFIG.pathToTransConfig = 'config/trans.yaml';
+CONFIG.pathToTransKeysConfig = 'config/transKeys.yaml';
+CONFIG.pathToTransViewConfig = 'config/transView.yaml';
 
-var trans = new Trans(YAML.load(CONFIG.pathToTransConfig));
-trans.start();
+var configKeys = YAML.load(CONFIG.pathToTransKeysConfig),
+    configView = YAML.load(CONFIG.pathToTransViewConfig);
+
+var transKeys = new TransKeys(configKeys),
+    transView = new TransView(configView);
+
+transKeys.start();
+transView.start();
+
 ```
 
 ##TODO
