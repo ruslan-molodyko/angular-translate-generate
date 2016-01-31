@@ -163,6 +163,7 @@ module.exports = Class.create(function() {
                         .replace(/[\r\n\t]*/g, '') // Remove new line
                         .replace(/[\s]+/g, ' ') // Remove many of spaces left only one
                         .replace(/(^\s)|(\s$)/, '') // Remove spaces before and after string
+                        .replace(/\"+/g, '\\"') // Escape symbol
                 ) + '$3'
             );
         }
