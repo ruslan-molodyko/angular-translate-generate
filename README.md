@@ -3,8 +3,10 @@ Generate translate keys for angular file views
 
 https://scotch.io/tutorials/internationalization-of-angularjs-applications
 
-Publish to npm and bower
+### Publish to npm and bower
+
 https://viget.com/extend/publishing-packages-to-npm-and-bower
+
 https://viget.com/extend/an-update-on-updating-npm-and-bower-packages
 
 Config for generate keys
